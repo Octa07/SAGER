@@ -1,8 +1,0 @@
-{
-  "name": "octa07/sager",
-  "description": "Sistema de agenda y reservas SAGER",
-  "type": "project",
-  "require": {
-    "ext-pdo": "*"
-  }
-}
