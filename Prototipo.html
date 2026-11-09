@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prototipo V1.0 - Sistema de Agendamiento y Control de Reservas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <div class="brand"><i class="fa-solid fa-calendar-check"></i><h1>Prototipo Sistema de Reservas V1.0</h1></div>
+        <div class="nav-tabs">
+            <button class="tab-btn active" data-view="client-view" onclick="switchView('client-view', this)"><i class="fa-solid fa-calendar-plus"></i> Reservar cita</button>
+            <button class="tab-btn" data-view="admin-login" onclick="switchView('admin-login', this)"><i class="fa-solid fa-lock"></i> Acceso administrador</button>
+        </div>
+    </header>
+
+    <div class="main-container">
+        
+        <!-- VISTA 1: CLIENTE (Agendamiento) -->
+        <section id="client-view" class="view-section active">
+            <div class="view-heading">
+                <div><p class="eyebrow">Inicio · Paso 1 de 3</p><h2>Agenda tu cita</h2><p class="heading-note">Selecciona un servicio, fecha y horario disponible.</p></div>
+                <span class="flow-chip"><i class="fa-solid fa-shield-heart"></i> Reserva segura</span>
+            </div>
+            <div class="flow-steps" aria-label="Progreso de la reserva"><span class="current"><b>1</b> Servicio y horario</span><span><b>2</b> Confirmación</span><span><b>3</b> Resultado</span></div>
+            <div class="reservation-grid">
+                <div>
+                    <div class="form-group">
+                        <label><i class="fa-solid fa-scissors"></i> Seleccione el Servicio:</label>
+                        <select id="service-select">
+                            <option value="1">Consultoría Especializada (Utiliza 2 insumos)</option>
+                            <option value="2">Mantenimiento de Equipo (Utiliza 3 insumos)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="date-select"><i class="fa-regular fa-calendar"></i> Fecha de la cita:</label>
+                        <input id="date-select" type="date" value="2026-06-15">
+                    </div>
+
+                    <div class="form-group">
+                        <label><i class="fa-regular fa-clock"></i> Horarios Disponibles (Validación en tiempo real):</label>
+                        <div class="availability-note"><span class="status-dot"></span><span id="availability-message">Disponibilidad actualizada para el día seleccionado.</span></div>
+                        <div id="time-slots" class="time-slots">
+                            <button class="slot booked" type="button" disabled>09:00 AM</button>
+                            <button class="slot selected" type="button">10:00 AM</button>
+                            <button class="slot" type="button">11:00 AM</button>
+                            <button class="slot" type="button">02:00 PM</button>
+                            <button class="slot booked" type="button" disabled>03:00 PM</button>
+                            <button class="slot" type="button">04:00 PM</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="confirmation-card">
+                    <h3>Confirma tu reserva</h3>
+                    <p>Al confirmar, registraremos la cita y descontaremos automáticamente los materiales correspondientes del inventario.</p>
+                    
+                    <div class="form-group">
+                        <label>Nombre del Cliente:</label>
+                        <input type="text" placeholder="Ej. Roberto Aragón">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico:</label>
+                        <input type="email" placeholder="correo@ejemplo.com">
+                    </div>
+
+                    <button class="btn-primary" onclick="openConfirmation()"><i class="fa-solid fa-arrow-right"></i> Revisar y confirmar</button>
+                    <p class="helper-text"><i class="fa-solid fa-circle-info"></i> Los insumos se descuentan al confirmar la cita.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="admin-login" class="view-section">
+            <div class="auth-layout">
+                <div class="auth-intro"><p class="eyebrow">Entorno privado</p><h2>Acceso de administrador</h2><p class="heading-note">Ingresa para consultar la agenda del día y supervisar alertas de inventario.</p><div class="auth-points"><span><i class="fa-solid fa-calendar-day"></i> Citas de hoy</span><span><i class="fa-solid fa-triangle-exclamation"></i> Stock crítico</span></div></div>
+                <form class="auth-card" onsubmit="loginAdmin(event)"><div class="auth-icon"><i class="fa-solid fa-user-shield"></i></div><h3>Iniciar sesión</h3><p>Demo del flujo de autenticación</p><label for="admin-email">Correo electrónico</label><input id="admin-email" type="email" value="admin@reservas.local" required><label for="admin-password">Contraseña</label><input id="admin-password" type="password" value="admin123" required><button class="btn-primary" type="submit"><i class="fa-solid fa-right-to-bracket"></i> Ingresar al panel</button><div id="login-error" class="login-error" role="alert">Revisa tus credenciales e inténtalo nuevamente.</div></form>
+            </div>
+        </section>
+
+        <!-- VISTA 2: ADMINISTRADOR (Dashboard) -->
+        <section id="admin-view" class="view-section">
+            <div class="view-heading">
+                <div><p class="eyebrow">Menú principal · Administrador</p><h2>Panel de Control</h2><p class="heading-note">Agenda, disponibilidad e inventario en un solo lugar.</p></div>
+                <div class="dashboard-topline"><span class="status-dot"></span> Sistema operativo</div>
+            </div>
+            
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>Citas Programadas Hoy</h3>
+                    <div id="appointment-count" class="number">12</div><p class="stat-caption">+3 frente a ayer</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Insumos en Stock</h3>
+                    <div id="stock-count" class="number">48 <small>un.</small></div><p class="stat-caption">Actualizado al confirmar</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Alertas de Inventario</h3>
+                    <div id="alert-count" class="number">1</div><p class="stat-caption">Requiere atención</p>
+                </div>
+            </div>
+
+            <div class="admin-content">
+                <div class="panel">
+                    <div class="panel-heading"><h3>Agenda de citas</h3><span>Actualizada hace 2 min</span></div>
+                    <div class="table-wrap"><table>
+                <thead>
+                    <tr>
+                        <th>ID Cita</th>
+                        <th>Cliente</th>
+                        <th>Servicio</th>
+                        <th>Horario</th>
+                        <th>Estado Inventario</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>#1042</td>
+                        <td>María López</td>
+                        <td>Consultoría Especializada</td>
+                        <td>10:00 AM</td>
+                        <td><span class="badge success">Stock Descontado</span></td>
+                    </tr>
+                    <tr>
+                        <td>#1043</td>
+                        <td>Carlos Ruiz</td>
+                        <td>Mantenimiento de Equipo</td>
+                        <td>11:30 AM</td>
+                        <td><span class="badge success">Stock Descontado</span></td>
+                    </tr>
+                    <tr>
+                        <td>#1044</td>
+                        <td>Ana Gómez</td>
+                        <td>Consultoría Especializada</td>
+                        <td>02:00 PM</td>
+                        <td><span class="badge warning">Alerta: Stock Bajo</span></td>
+                    </tr>
+                </tbody>
+                    </table></div>
+                </div>
+                <div class="panel">
+                    <div class="panel-heading"><h3>Inventario crítico</h3><span>1 alerta</span></div>
+                    <div class="inventory-list">
+                        <div class="inventory-item"><div><strong>Guantes de nitrilo</strong><small>Mínimo recomendado: 10 un.</small></div><span class="stock-low">8 un.</span></div>
+                        <div class="inventory-item"><div><strong>Kit de mantenimiento</strong><small>Disponible para 6 servicios</small></div><span class="badge success">Estable</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <div id="confirmation-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <div class="modal-card"><button class="modal-close" type="button" aria-label="Cerrar" onclick="closeConfirmation()"><i class="fa-solid fa-xmark"></i></button><p class="eyebrow">Paso 2 · Confirmación</p><h3 id="modal-title">Confirma los datos de tu cita</h3><div class="booking-summary"><div><small>Servicio</small><strong id="summary-service"></strong></div><div><small>Fecha y hora</small><strong id="summary-date"></strong></div><div><small>Cliente</small><strong id="summary-client"></strong></div></div><p class="modal-note"><i class="fa-solid fa-circle-info"></i> Al confirmar, el sistema reservará el horario y descontará los insumos asociados.</p><div class="modal-actions"><button class="btn-secondary" type="button" onclick="closeConfirmation()">Volver a editar</button><button class="btn-primary" type="button" onclick="confirmReservation()"><i class="fa-solid fa-check"></i> Confirmar cita</button></div></div>
+    </div>
+
+    <div id="success-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="success-title">
+        <div class="modal-card success-card"><div class="success-icon"><i class="fa-solid fa-check"></i></div><p class="eyebrow">Paso 3 · Resultado</p><h3 id="success-title">¡Cita confirmada!</h3><p class="success-copy">Tu reserva fue registrada correctamente. El inventario se actualizó y el horario quedó bloqueado.</p><div class="success-reference">Código de reserva <strong id="reservation-code">#1045</strong></div><button class="btn-primary" type="button" onclick="closeSuccess()">Entendido</button></div>
+    </div>
+
+    <script>
+        let loggedIn = false;
+        let stock = 48;
+
+        function switchView(viewId) {
+            if (viewId === 'admin-view' && !loggedIn) viewId = 'admin-login';
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+            document.querySelector(`.tab-btn[data-view="${viewId === 'admin-view' ? 'admin-login' : viewId}"]`)?.classList.add('active');
+        }
+
+        function openConfirmation() {
+            const service = document.getElementById('service-select');
+            const date = document.getElementById('date-select').value;
+            const selectedSlot = document.querySelector('.slot.selected');
+            const name = document.querySelector('input[placeholder="Ej. Roberto Aragón"]').value || 'Cliente registrado';
+            if (!date || !selectedSlot) return;
+            document.getElementById('summary-service').textContent = service.options[service.selectedIndex].text.split(' (')[0];
+            document.getElementById('summary-date').textContent = `${date} · ${selectedSlot.textContent}`;
+            document.getElementById('summary-client').textContent = name;
+            document.getElementById('confirmation-modal').classList.add('visible');
+        }
+
+        function closeConfirmation() { document.getElementById('confirmation-modal').classList.remove('visible'); }
+
+        function confirmReservation() {
+            closeConfirmation();
+            stock -= 2;
+            document.getElementById('stock-count').innerHTML = `${stock} <small>un.</small>`;
+            document.getElementById('appointment-count').textContent = '13';
+            document.getElementById('success-modal').classList.add('visible');
+        }
+
+        function closeSuccess() { document.getElementById('success-modal').classList.remove('visible'); }
+
+        function loginAdmin(event) {
+            event.preventDefault();
+            loggedIn = true;
+            document.getElementById('login-error').classList.remove('visible');
+            document.querySelectorAll('.view-section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById('admin-view').classList.add('active');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('[data-view="admin-login"]').classList.add('active');
+        }
+
+        document.getElementById('date-select').addEventListener('change', function() {
+            const message = document.getElementById('availability-message');
+            message.textContent = 'Comprobando disponibilidad...';
+            setTimeout(() => { message.textContent = 'Disponibilidad actualizada para el día seleccionado.'; }, 350);
+        });
+
+        document.querySelectorAll('.slot:not(.booked)').forEach(slot => {
+            slot.addEventListener('click', function() {
+                document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+                this.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>
