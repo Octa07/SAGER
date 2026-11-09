@@ -33,3 +33,8 @@ CREATE TABLE citas (
     FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio),
     UNIQUE (fecha_cita, hora_cita)
 );
+
+CREATE USER IF NOT EXISTS 'usuarioClases'@'LocalHost' IDENTIFIED BY 'Pass123';
+ALTER USER 'usuarioClases'@'LocalHost' IDENTIFIED BY 'Pass123';
+GRANT ALL PRIVILEGES ON sistema_reservas.* TO 'usuarioClases'@'LocalHost';
+FLUSH PRIVILEGES;
