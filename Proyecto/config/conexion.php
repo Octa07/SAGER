@@ -1,11 +1,17 @@
 <?php
 declare(strict_types=1);
 
+$defaultSettings = [
+    'DB_HOST' => '127.0.0.1',
+    'DB_NAME' => 'sistema_reservas',
+    'DB_USER' => 'usuarioClases',
+    'DB_PASSWORD' => 'Pass123',
+];
 $dbSettings = [
-    'DB_HOST' => getenv('DB_HOST'),
-    'DB_NAME' => getenv('DB_NAME'),
-    'DB_USER' => getenv('DB_USER'),
-    'DB_PASSWORD' => getenv('DB_PASSWORD'),
+    'DB_HOST' => getenv('DB_HOST') === false ? $defaultSettings['DB_HOST'] : getenv('DB_HOST'),
+    'DB_NAME' => getenv('DB_NAME') === false ? $defaultSettings['DB_NAME'] : getenv('DB_NAME'),
+    'DB_USER' => getenv('DB_USER') === false ? $defaultSettings['DB_USER'] : getenv('DB_USER'),
+    'DB_PASSWORD' => getenv('DB_PASSWORD') === false ? $defaultSettings['DB_PASSWORD'] : getenv('DB_PASSWORD'),
 ];
 $missingSettings = array_keys(array_filter(
     $dbSettings,
