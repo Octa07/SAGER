@@ -111,9 +111,3 @@ El volcado de la base de datos incluye una cuenta administradora de prueba.
 | Contraseña | `admin123` |
 
 La contraseña anterior corresponde al entorno de demostración. Se recomienda cambiarla antes de cualquier despliegue.
-
-## Consideraciones
-
-- La disponibilidad de las citas se protege tanto desde la aplicación como mediante restricciones en la base de datos.
-- La actualización del inventario se realiza junto con el registro de la reserva mediante operaciones transaccionales, para mantener la consistencia de los datos.
-- Las credenciales incluidas en esta documentación son únicamente para configuración y pruebas locales. No deben reutilizarse en producción.
