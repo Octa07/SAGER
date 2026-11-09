@@ -111,14 +111,16 @@ El volcado de la base de datos incluye una cuenta administradora de prueba.
 | Contraseña | `admin123` |
 
 La contraseña anterior corresponde al entorno de demostración. Se recomienda cambiarla antes de cualquier despliegue.
-para crear un nuevo admin ya con todo montado, nos vamos a crear una nueva terminal desde el mismo VS y ponemos el sig comando
-"$env:DB_HOST = "127.0.0.1"
+para crear un nuevo admin ya con todo montado, nos vamos a crear una nueva terminal desde el mismo VS y ponemos el sig comando de ejemplo
+
+"Set-Location .\SAGER-main\Proyecto ()
+
+$env:DB_HOST = "localhost"
 $env:DB_NAME = "sistema_reservas"
 $env:DB_USER = "usuarioClases"
-
-$mysqlPassword = Read-Host "Contraseña de MySQL" -AsSecureString
-$env:DB_PASSWORD = [System.Net.NetworkCredential]::new("", $mysqlPassword).Password
+$env:DB_PASSWORD = "Pass123"
 
 php .\crear_admin.php"
 
 y usamos la clave "Pass123" del usuario de la DB.
+
