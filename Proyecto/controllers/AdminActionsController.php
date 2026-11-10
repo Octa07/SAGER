@@ -77,6 +77,58 @@ try {
             $pdo->commit();
             redirigirAdmin('Stock repuesto correctamente.');
 
+        case 'reponer_stock_servicio':
+            $idInsumo = enteroFormulario('id_insumo', 1, PHP_INT_MAX);
+            $idServicio = enteroFormulario('id_servicio', 1, PHP_INT_MAX);
+            $cantidadReponer = enteroFormulario('cantidad_reponer', 1, 1000000);
+            $cantidadPorServicio = enteroFormulario('cantidad_por_servicio', 1, 1000000);
+            if (
+                $idInsumo === null || $idServicio === null
+                || $cantidadReponer === null || $cantidadPorServicio === null
+            ) {
+                redirigirAdmin('Selecciona el servicio e indica cantidades válidas para el stock y el servicio.');
+            }
+
+            $pdo->beginTransaction();
+            $buscarServicio = $pdo->prepare('SELECT id_servicio FROM servicios WHERE id_servicio = :id FOR UPDATE');
+            $buscarServicio->execute(['id' => $idServicio]);
+            if (!$buscarServicio->fetchColumn()) {
+                throw new DomainException('No se encontró el servicio seleccionado.');
+            }
+
+            $buscarInsumo = $pdo->prepare('SELECT stock_actual FROM insumos WHERE id_insumo = :id FOR UPDATE');
+            $buscarInsumo->execute(['id' => $idInsumo]);
+            $stockActual = $buscarInsumo->fetchColumn();
+            if ($stockActual === false) {
+                throw new DomainException('No se encontró el insumo seleccionado.');
+            }
+            if ((int) $stockActual > 2147483647 - $cantidadReponer) {
+                throw new DomainException('La cantidad supera el máximo permitido para el stock.');
+            }
+
+            $actualizarStock = $pdo->prepare(
+                'UPDATE insumos SET stock_actual = stock_actual + :cantidad WHERE id_insumo = :id'
+            );
+            $actualizarStock->execute(['cantidad' => $cantidadReponer, 'id' => $idInsumo]);
+
+            $guardarRelacion = $pdo->prepare(
+                'INSERT INTO servicio_insumos (id_servicio, id_insumo, cantidad)
+                 VALUES (:servicio, :insumo, :cantidad)
+                 ON DUPLICATE KEY UPDATE cantidad = VALUES(cantidad)'
+            );
+            $guardarRelacion->execute([
+                'servicio' => $idServicio,
+                'insumo' => $idInsumo,
+                'cantidad' => $cantidadPorServicio,
+            ]);
+            $marcarConfigurado = $pdo->prepare(
+                'UPDATE servicios SET insumos_configurados = 1 WHERE id_servicio = :id'
+            );
+            $marcarConfigurado->execute(['id' => $idServicio]);
+
+            $pdo->commit();
+            redirigirAdmin('Stock agregado e insumo asignado al servicio.');
+
         case 'actualizar_minimo':
             $idInsumo = enteroFormulario('id_insumo', 1, PHP_INT_MAX);
             $minimo = enteroFormulario('stock_minimo', 0, 1000000);
@@ -94,55 +146,6 @@ try {
                 }
             }
             redirigirAdmin('Stock mínimo actualizado.');
-
-        case 'asignar_insumo_servicio':
-            $idServicio = enteroFormulario('id_servicio', 1, PHP_INT_MAX);
-            $idInsumo = enteroFormulario('id_insumo', 1, PHP_INT_MAX);
-            $cantidad = enteroFormulario('cantidad', 0, 1000000);
-            if ($idServicio === null || $idInsumo === null || $cantidad === null) {
-                redirigirAdmin('Selecciona el servicio, el insumo y una cantidad válida.', 'error', '#insumos-por-servicio');
-            }
-
-            $pdo->beginTransaction();
-            $buscarServicio = $pdo->prepare('SELECT id_servicio FROM servicios WHERE id_servicio = :id FOR UPDATE');
-            $buscarServicio->execute(['id' => $idServicio]);
-            if (!$buscarServicio->fetchColumn()) {
-                throw new DomainException('No se encontró el servicio seleccionado.');
-            }
-
-            $buscarInsumo = $pdo->prepare('SELECT id_insumo FROM insumos WHERE id_insumo = :id');
-            $buscarInsumo->execute(['id' => $idInsumo]);
-            if (!$buscarInsumo->fetchColumn()) {
-                throw new DomainException('No se encontró el insumo seleccionado.');
-            }
-
-            if ($cantidad === 0) {
-                $guardarRelacion = $pdo->prepare(
-                    'DELETE FROM servicio_insumos WHERE id_servicio = :servicio AND id_insumo = :insumo'
-                );
-            } else {
-                $guardarRelacion = $pdo->prepare(
-                    'INSERT INTO servicio_insumos (id_servicio, id_insumo, cantidad)
-                     VALUES (:servicio, :insumo, :cantidad)
-                     ON DUPLICATE KEY UPDATE cantidad = VALUES(cantidad)'
-                );
-            }
-            $parametrosRelacion = ['servicio' => $idServicio, 'insumo' => $idInsumo];
-            if ($cantidad > 0) {
-                $parametrosRelacion['cantidad'] = $cantidad;
-            }
-            $guardarRelacion->execute($parametrosRelacion);
-
-            $marcarConfigurado = $pdo->prepare(
-                'UPDATE servicios SET insumos_configurados = 1 WHERE id_servicio = :id'
-            );
-            $marcarConfigurado->execute(['id' => $idServicio]);
-            $pdo->commit();
-            redirigirAdmin(
-                $cantidad === 0 ? 'Insumo quitado del servicio.' : 'Insumo asignado al servicio.',
-                'success',
-                '#insumos-por-servicio'
-            );
 
         case 'actualizar_insumos_servicio':
             $idServicio = enteroFormulario('id_servicio', 1, PHP_INT_MAX);
