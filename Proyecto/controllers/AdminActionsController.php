@@ -95,6 +95,55 @@ try {
             }
             redirigirAdmin('Stock mínimo actualizado.');
 
+        case 'asignar_insumo_servicio':
+            $idServicio = enteroFormulario('id_servicio', 1, PHP_INT_MAX);
+            $idInsumo = enteroFormulario('id_insumo', 1, PHP_INT_MAX);
+            $cantidad = enteroFormulario('cantidad', 0, 1000000);
+            if ($idServicio === null || $idInsumo === null || $cantidad === null) {
+                redirigirAdmin('Selecciona el servicio, el insumo y una cantidad válida.', 'error', '#insumos-por-servicio');
+            }
+
+            $pdo->beginTransaction();
+            $buscarServicio = $pdo->prepare('SELECT id_servicio FROM servicios WHERE id_servicio = :id FOR UPDATE');
+            $buscarServicio->execute(['id' => $idServicio]);
+            if (!$buscarServicio->fetchColumn()) {
+                throw new DomainException('No se encontró el servicio seleccionado.');
+            }
+
+            $buscarInsumo = $pdo->prepare('SELECT id_insumo FROM insumos WHERE id_insumo = :id');
+            $buscarInsumo->execute(['id' => $idInsumo]);
+            if (!$buscarInsumo->fetchColumn()) {
+                throw new DomainException('No se encontró el insumo seleccionado.');
+            }
+
+            if ($cantidad === 0) {
+                $guardarRelacion = $pdo->prepare(
+                    'DELETE FROM servicio_insumos WHERE id_servicio = :servicio AND id_insumo = :insumo'
+                );
+            } else {
+                $guardarRelacion = $pdo->prepare(
+                    'INSERT INTO servicio_insumos (id_servicio, id_insumo, cantidad)
+                     VALUES (:servicio, :insumo, :cantidad)
+                     ON DUPLICATE KEY UPDATE cantidad = VALUES(cantidad)'
+                );
+            }
+            $parametrosRelacion = ['servicio' => $idServicio, 'insumo' => $idInsumo];
+            if ($cantidad > 0) {
+                $parametrosRelacion['cantidad'] = $cantidad;
+            }
+            $guardarRelacion->execute($parametrosRelacion);
+
+            $marcarConfigurado = $pdo->prepare(
+                'UPDATE servicios SET insumos_configurados = 1 WHERE id_servicio = :id'
+            );
+            $marcarConfigurado->execute(['id' => $idServicio]);
+            $pdo->commit();
+            redirigirAdmin(
+                $cantidad === 0 ? 'Insumo quitado del servicio.' : 'Insumo asignado al servicio.',
+                'success',
+                '#insumos-por-servicio'
+            );
+
         case 'actualizar_insumos_servicio':
             $idServicio = enteroFormulario('id_servicio', 1, PHP_INT_MAX);
             $cantidadesRecibidas = $_POST['insumos'] ?? [];
