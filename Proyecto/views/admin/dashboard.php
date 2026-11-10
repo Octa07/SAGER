@@ -249,15 +249,43 @@ if (!defined('SAGER_VIEW') || !esAdministrador()) {
                                         </span>
                                     <?php endif; ?>
                                     <div class="inventory-actions">
-                                        <form action="../controllers/AdminActionsController.php" method="post" class="admin-inline-form">
+                                        <?php if ($servicios === []): ?>
+                                            <p class="form-help">Registra un servicio antes de asignar este insumo.</p>
+                                        <?php else: ?>
+                                        <form action="../controllers/AdminActionsController.php" method="post" class="admin-inline-form service-restock-form">
                                             <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
-                                            <input type="hidden" name="accion" value="reponer_stock">
+                                            <input type="hidden" name="accion" value="reponer_stock_servicio">
                                             <input type="hidden" name="id_insumo" value="<?= (int) $insumo['id_insumo'] ?>">
-                                            <label for="restock-<?= (int) $insumo['id_insumo'] ?>">Unidades para agregar</label>
+                                            <label for="restock-service-<?= (int) $insumo['id_insumo'] ?>">Servicio al que se asigna</label>
+                                            <select
+                                                class="form-select"
+                                                id="restock-service-<?= (int) $insumo['id_insumo'] ?>"
+                                                name="id_servicio"
+                                                required
+                                            >
+                                                <option value="">Selecciona un servicio</option>
+                                                <?php foreach ($servicios as $servicio): ?>
+                                                    <option value="<?= (int) $servicio['id_servicio'] ?>">
+                                                        <?= escapar($servicio['nombre_servicio']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
+                                            <label for="restock-<?= (int) $insumo['id_insumo'] ?>">Unidades para agregar al stock</label>
                                             <input
                                                 class="form-control"
                                                 id="restock-<?= (int) $insumo['id_insumo'] ?>"
-                                                name="cantidad"
+                                                name="cantidad_reponer"
+                                                type="number"
+                                                min="1"
+                                                max="1000000"
+                                                value="1"
+                                                required
+                                            >
+                                            <label for="service-quantity-<?= (int) $insumo['id_insumo'] ?>">Unidades usadas por cita</label>
+                                            <input
+                                                class="form-control"
+                                                id="service-quantity-<?= (int) $insumo['id_insumo'] ?>"
+                                                name="cantidad_por_servicio"
                                                 type="number"
                                                 min="1"
                                                 max="1000000"
@@ -265,9 +293,10 @@ if (!defined('SAGER_VIEW') || !esAdministrador()) {
                                                 required
                                             >
                                             <button class="btn btn-primary btn-small" type="submit">
-                                                <i class="fa-solid fa-plus"></i> Reponer
+                                                <i class="fa-solid fa-plus"></i> Reponer y asignar
                                             </button>
                                         </form>
+                                        <?php endif; ?>
                                         <form action="../controllers/AdminActionsController.php" method="post" class="admin-inline-form">
                                             <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
                                             <input type="hidden" name="accion" value="actualizar_minimo">
@@ -355,73 +384,6 @@ if (!defined('SAGER_VIEW') || !esAdministrador()) {
                             <?php endif; ?>
                             <button class="btn btn-primary btn-small" type="submit">
                                 <i class="fa-solid fa-floppy-disk"></i> Guardar consumo de esta cita
-                            </button>
-                        </form>
-                    <?php endif; ?>
-                </div>
-            </section>
-
-            <section class="panel card service-ingredients-panel" id="insumos-por-servicio">
-                <div class="panel-heading">
-                    <div class="panel-heading-copy">
-                        <h3>Asignar insumo a un servicio</h3>
-                        <p>Elige el servicio, el insumo y la cantidad que se usará en cada cita nueva.</p>
-                    </div>
-                </div>
-                <div class="service-ingredient-list">
-                    <?php if ($servicios === [] || $insumos === []): ?>
-                        <p class="helper-text">
-                            <?= $servicios === [] ? 'Registra un servicio' : 'Registra un insumo' ?>
-                            para poder asignarlo.
-                        </p>
-                    <?php else: ?>
-                        <form
-                            action="../controllers/AdminActionsController.php"
-                            method="post"
-                            class="management-form service-assignment-form"
-                        >
-                            <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
-                            <input type="hidden" name="accion" value="asignar_insumo_servicio">
-                            <div class="service-assignment-fields">
-                                <div class="form-group">
-                                    <label for="assignment-service">Servicio</label>
-                                    <select class="form-select" id="assignment-service" name="id_servicio" required>
-                                        <option value="">Selecciona un servicio</option>
-                                        <?php foreach ($servicios as $servicio): ?>
-                                            <option value="<?= (int) $servicio['id_servicio'] ?>">
-                                                <?= escapar($servicio['nombre_servicio']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="assignment-ingredient">Insumo</label>
-                                    <select class="form-select" id="assignment-ingredient" name="id_insumo" required>
-                                        <option value="">Selecciona un insumo</option>
-                                        <?php foreach ($insumos as $insumo): ?>
-                                            <option value="<?= (int) $insumo['id_insumo'] ?>">
-                                                <?= escapar($insumo['nombre_insumo']) ?>
-                                            </option>
-                                        <?php endforeach; ?>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="assignment-quantity">Cantidad por cita</label>
-                                    <input
-                                        class="form-control"
-                                        id="assignment-quantity"
-                                        name="cantidad"
-                                        type="number"
-                                        min="0"
-                                        max="1000000"
-                                        value="1"
-                                        required
-                                    >
-                                </div>
-                            </div>
-                            <p class="form-help">Usa 0 para quitar ese insumo del servicio.</p>
-                            <button class="btn btn-primary btn-small" type="submit">
-                                <i class="fa-solid fa-floppy-disk"></i> Guardar asignación
                             </button>
                         </form>
                     <?php endif; ?>
