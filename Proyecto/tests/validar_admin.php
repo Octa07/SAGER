@@ -219,10 +219,12 @@ try {
 
     if ($service) {
         if ($inventory) {
-            $updateServiceIngredients = postAdmin($baseUrl, $adminCookie, $csrfToken, [
-                'accion' => 'actualizar_insumos_servicio',
+            $assignIngredientFromRestock = postAdmin($baseUrl, $adminCookie, $csrfToken, [
+                'accion' => 'reponer_stock_servicio',
                 'id_servicio' => (string) $service['id_servicio'],
-                'insumos' => [(string) $inventory['id_insumo'] => '3'],
+                'id_insumo' => (string) $inventory['id_insumo'],
+                'cantidad_reponer' => '2',
+                'cantidad_por_servicio' => '3',
             ]);
             $serviceIngredientQuantity = $pdo->prepare(
                 'SELECT cantidad FROM servicio_insumos WHERE id_servicio = :servicio AND id_insumo = :insumo'
@@ -231,12 +233,16 @@ try {
                 'servicio' => $service['id_servicio'],
                 'insumo' => $inventory['id_insumo'],
             ]);
+            $stockAfterServiceRestock = (int) $pdo->query(
+                'SELECT stock_actual FROM insumos WHERE id_insumo = ' . (int) $inventory['id_insumo']
+            )->fetchColumn();
             recordResult(
                 $results,
                 'ADM-11',
-                $updateServiceIngredients['status'] === 200
-                    && (int) $serviceIngredientQuantity->fetchColumn() === 3,
-                'El administrador asigna un insumo y su cantidad al servicio.'
+                $assignIngredientFromRestock['status'] === 200
+                    && (int) $serviceIngredientQuantity->fetchColumn() === 3
+                    && $stockAfterServiceRestock === 5,
+                'Al reponer desde existencias se suma stock y se asigna el insumo al servicio.'
             );
 
             $clearServiceIngredients = postAdmin($baseUrl, $adminCookie, $csrfToken, [
