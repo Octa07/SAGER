@@ -702,24 +702,6 @@ tr:last-child td { border-bottom: none; }
     padding: 8px 18px 16px;
 }
 
-.admin-dashboard .service-assignment-form {
-    padding: 8px 0 0;
-}
-
-.admin-dashboard .service-assignment-fields {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-}
-
-.admin-dashboard .service-assignment-fields .form-group {
-    margin-bottom: 8px;
-}
-
-.admin-dashboard .service-assignment-form .form-help {
-    margin: 0 0 12px;
-}
-
 .admin-dashboard .service-ingredient-item {
     border-bottom: 1px solid var(--border);
 }
@@ -846,6 +828,14 @@ tr:last-child td { border-bottom: none; }
     min-width: 0;
 }
 
+.admin-dashboard .admin-inline-form.service-restock-form {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-dashboard .admin-inline-form.service-restock-form select {
+    min-width: 0;
+}
+
 .admin-dashboard .admin-management-grid {
     gap: 16px;
     margin-top: 16px;
@@ -888,15 +878,9 @@ tr:last-child td { border-bottom: none; }
         padding-left: 0;
     }
 
-    .admin-dashboard .service-assignment-fields {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
-
     .admin-dashboard .service-ingredient-item summary {
         align-items: flex-start;
         flex-direction: column;
         gap: 4px;
     }
 }
-
