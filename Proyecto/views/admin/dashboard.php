@@ -364,77 +364,66 @@ if (!defined('SAGER_VIEW') || !esAdministrador()) {
             <section class="panel card service-ingredients-panel" id="insumos-por-servicio">
                 <div class="panel-heading">
                     <div class="panel-heading-copy">
-                        <h3>Consumo inicial por servicio</h3>
-                        <p>Esta cantidad se copia a cada nueva cita. Editar una cita no cambia este valor.</p>
+                        <h3>Asignar insumo a un servicio</h3>
+                        <p>Elige el servicio, el insumo y la cantidad que se usará en cada cita nueva.</p>
                     </div>
                 </div>
                 <div class="service-ingredient-list">
-                    <?php if ($servicios === []): ?>
-                        <p class="helper-text">No hay servicios registrados.</p>
+                    <?php if ($servicios === [] || $insumos === []): ?>
+                        <p class="helper-text">
+                            <?= $servicios === [] ? 'Registra un servicio' : 'Registra un insumo' ?>
+                            para poder asignarlo.
+                        </p>
                     <?php else: ?>
-                        <?php foreach ($servicios as $servicio): ?>
-                            <?php
-                            $idServicio = (int) $servicio['id_servicio'];
-                            $cantidadesServicio = $insumosPorServicio[$idServicio] ?? [];
-                            $insumosConfigurados = (int) $servicio['insumos_configurados'] === 1;
-                            ?>
-                            <details class="service-ingredient-item" id="servicio-insumos-<?= $idServicio ?>">
-                                <summary>
-                                    <span><?= escapar($servicio['nombre_servicio']) ?></span>
-                                    <small>
-                                        <?php if (!$insumosConfigurados): ?>
-                                            Configuración pendiente
-                                        <?php elseif ($cantidadesServicio === []): ?>
-                                            Sin insumos requeridos
-                                        <?php else: ?>
-                                            <?= count($cantidadesServicio) ?> insumos requeridos
-                                        <?php endif; ?>
-                                    </small>
-                                </summary>
-                                <form
-                                    action="../controllers/AdminActionsController.php"
-                                    method="post"
-                                    class="service-ingredient-form"
-                                >
-                                    <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
-                                    <input type="hidden" name="accion" value="actualizar_insumos_servicio">
-                                    <input type="hidden" name="id_servicio" value="<?= $idServicio ?>">
-                                    <p class="form-help">
-                                        Define cuántas unidades de cada insumo se descuentan al crear una cita nueva.
-                                    </p>
-                                    <?php if ($insumos === []): ?>
-                                        <p class="helper-text">No hay insumos registrados.</p>
-                                    <?php else: ?>
-                                        <div class="service-ingredient-fields">
-                                            <?php foreach ($insumos as $insumo): ?>
-                                                <?php $idInsumo = (int) $insumo['id_insumo']; ?>
-                                                <div class="service-ingredient-field">
-                                                    <label for="servicio-<?= $idServicio ?>-insumo-<?= $idInsumo ?>">
-                                                        <?= escapar($insumo['nombre_insumo']) ?>
-                                                    </label>
-                                                    <div class="service-ingredient-stock">
-                                                        Disponible: <?= (int) $insumo['stock_actual'] ?> un.
-                                                    </div>
-                                                    <input
-                                                        class="form-control"
-                                                        id="servicio-<?= $idServicio ?>-insumo-<?= $idInsumo ?>"
-                                                        name="insumos[<?= $idInsumo ?>]"
-                                                        type="number"
-                                                        min="0"
-                                                        max="1000000"
-                                                        value="<?= (int) ($cantidadesServicio[$idInsumo] ?? 0) ?>"
-                                                        required
-                                                    >
-                                                </div>
-                                            <?php endforeach; ?>
-                                        </div>
-                                    <?php endif; ?>
-                                    <button class="btn btn-primary btn-small" type="submit">
-                                        <i class="fa-solid fa-floppy-disk"></i> Guardar consumo inicial
-                                    </button>
-                                </form>
-                            </details>
-                        <?php endforeach; ?>
+                        <form
+                            action="../controllers/AdminActionsController.php"
+                            method="post"
+                            class="management-form service-assignment-form"
+                        >
+                            <input type="hidden" name="csrf_token" value="<?= escapar($csrfToken) ?>">
+                            <input type="hidden" name="accion" value="asignar_insumo_servicio">
+                            <div class="service-assignment-fields">
+                                <div class="form-group">
+                                    <label for="assignment-service">Servicio</label>
+                                    <select class="form-select" id="assignment-service" name="id_servicio" required>
+                                        <option value="">Selecciona un servicio</option>
+                                        <?php foreach ($servicios as $servicio): ?>
+                                            <option value="<?= (int) $servicio['id_servicio'] ?>">
+                                                <?= escapar($servicio['nombre_servicio']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="assignment-ingredient">Insumo</label>
+                                    <select class="form-select" id="assignment-ingredient" name="id_insumo" required>
+                                        <option value="">Selecciona un insumo</option>
+                                        <?php foreach ($insumos as $insumo): ?>
+                                            <option value="<?= (int) $insumo['id_insumo'] ?>">
+                                                <?= escapar($insumo['nombre_insumo']) ?>
+                                            </option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="assignment-quantity">Cantidad por cita</label>
+                                    <input
+                                        class="form-control"
+                                        id="assignment-quantity"
+                                        name="cantidad"
+                                        type="number"
+                                        min="0"
+                                        max="1000000"
+                                        value="1"
+                                        required
+                                    >
+                                </div>
+                            </div>
+                            <p class="form-help">Usa 0 para quitar ese insumo del servicio.</p>
+                            <button class="btn btn-primary btn-small" type="submit">
+                                <i class="fa-solid fa-floppy-disk"></i> Guardar asignación
+                            </button>
+                        </form>
                     <?php endif; ?>
                 </div>
             </section>
